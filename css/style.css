@@ -109,10 +109,10 @@ body.has-mini .page{padding-bottom:110px}
 .lamp{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:2;background:var(--surface);border:2px solid #D9CBB0;box-shadow:0 2px 6px rgba(139,111,71,.12);transition:transform .25s,background .25s,box-shadow .25s}
 .lamp:active{transform:scale(.9)}
 .lamp b{font-size:10px;color:var(--muted)}
-.lamp svg{width:18px;height:18px;fill:none;stroke:var(--text);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;display:none}
+.lamp svg{position:absolute;top:-6px;right:-6px;width:18px;height:18px;padding:3px;border-radius:50%;background:#6B4F1D;fill:none;stroke:#FFFCF6;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;display:none}
 .lamp[aria-pressed="true"]{background:var(--champagne);border-color:var(--champagne-deep);box-shadow:0 0 18px 4px rgba(212,178,122,.55);animation:pop .35s ease-out}
 .lamp[aria-pressed="true"] svg{display:block}
-.lamp[aria-pressed="true"] b{display:none}
+.lamp[aria-pressed="true"] b{color:#3F2D0E;font-weight:800}
 .hero.full .arch-glow{opacity:1}
 .arch-glow{position:absolute;left:50%;top:80px;width:240px;height:240px;margin-left:-120px;border-radius:50%;background:radial-gradient(circle,rgba(255,243,214,.9),rgba(212,178,122,0) 65%);opacity:0;transition:opacity 1s}
 .arch-text{position:absolute;left:102px;top:72px;width:114px;text-align:center}
