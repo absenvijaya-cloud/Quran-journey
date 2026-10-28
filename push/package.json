@@ -1,0 +1,10 @@
+{
+  "name": "quran-journey-push",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Pengirim notifikasi waktu salat untuk Quran Journey (dijalankan GitHub Actions)",
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "web-push": "^3.6.7"
+  }
+}

@@ -102,3 +102,10 @@ Naikkan angka `VERSI` di `sw.js` (satu baris di atas file). Tanpa itu, HP yang s
 - Subuh memakai `data/adzan/fajr.mp3`, waktu lain memakai `data/adzan/makkah.mp3`. Untuk mengganti suara, ganti file dengan nama yang sama lalu naikkan `VERSI` di `sw.js`.
 - Adzan hanya berbunyi saat aplikasi terbuka, dan hanya memakai jadwal asli (bukan jadwal contoh). Satu kali per waktu salat per hari.
 - Sebelum dijual, pastikan izin pemakaian rekaman adzan. Sumbernya repositori `adhan-audio` yang tidak mencantumkan lisensi.
+
+## Notifikasi waktu salat (GitHub Actions)
+
+- Aplikasi menyimpan jadwal salat tiap perangkat ke Firestore (`users/{uid}/devices/{id}`). File `.github/workflows/push.yml` menjalankan `push/send.js` tiap 5 menit untuk mengirim notifikasi yang waktunya baru masuk.
+- Butuh tiga GitHub Secrets: `FIREBASE_SERVICE_ACCOUNT` (isi file JSON akun layanan Firebase), `VAPID_PUBLIC_KEY`, dan `VAPID_PRIVATE_KEY`. Kunci publik yang sama ada di `js/firebase-config.js`.
+- Aturan Firestore di `firestore.rules` harus dipublikasikan ulang setelah ada perubahan.
+- Keterbatasan: GitHub bisa terlambat menjalankan jadwal (beberapa menit sampai belasan menit), nada notifikasi biasa (bukan adzan), dan GitHub menonaktifkan jadwal otomatis jika repositori tidak ada aktivitas selama 60 hari (aktifkan lagi di tab Actions).

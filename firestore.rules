@@ -5,6 +5,10 @@ service cloud.firestore {
     match /users/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
+    // Data perangkat untuk notifikasi: hanya milik pengguna itu sendiri.
+    match /users/{uid}/devices/{dev} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
     // Selain itu, semuanya tertutup.
     match /{document=**} {
       allow read, write: if false;

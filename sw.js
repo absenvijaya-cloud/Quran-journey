@@ -1,10 +1,10 @@
 /* Service worker Quran Journey: simpan kerangka aplikasi dan data surah agar bisa dibuka offline.
    Naikkan angka VERSI setiap kali Anda mengganti file aplikasi, supaya HP pengguna ikut memperbarui. */
-const VERSI = 'qj-v5';
+const VERSI = 'qj-v6';
 const KERANGKA = [
   './', './index.html', './manifest.webmanifest',
   './css/style.css', './js/app.js', './js/core.js', './js/sync.js', './js/firebase-config.js',
-  './data/surah-list.json', './data/kisah/index.json', './js/adzan.js', './data/adzan/fajr.mp3', './data/adzan/makkah.mp3',
+  './data/surah-list.json', './data/kisah/index.json', './js/adzan.js', './js/push.js', './data/adzan/fajr.mp3', './data/adzan/makkah.mp3',
   './icons/icon-192.png', './icons/icon-512.png', './icons/favicon-64.png', './icons/apple-touch-icon.png'
 ];
 
@@ -54,4 +54,30 @@ self.addEventListener('fetch', (e) => {
       return r;
     }).catch(() => caches.match(req).then((hit) => hit || caches.match('./index.html')))
   );
+});
+
+/* Notifikasi waktu salat dari pengirim (GitHub Actions). */
+self.addEventListener('push', (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (err) { d = {}; }
+  e.waitUntil(self.registration.showNotification(d.title || 'Quran Journey', {
+    body: d.body || '',
+    tag: d.tag || 'adzan',
+    icon: './icons/icon-192.png',
+    badge: './icons/favicon-64.png',
+    renotify: true,
+    requireInteraction: true,
+    data: { id: d.id || '', url: './' }
+  }));
+});
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const id = (e.notification.data && e.notification.data.id) || '';
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+    for (const c of list) {
+      if ('focus' in c) { c.postMessage({ type: 'adzan', id }); return c.focus(); }
+    }
+    return self.clients.openWindow('./?adzan=' + encodeURIComponent(id));
+  }));
 });

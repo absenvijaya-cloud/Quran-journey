@@ -137,4 +137,12 @@
     prefetch
   };
   if (cfg().on) prefetch();
+
+  /* Dibuka dari notifikasi: tampilkan banner dengan tombol putar (butuh ketukan agar browser mengizinkan suara). */
+  function fromNotif(id) { if (NAMES[id]) { unlock(); prefetch(); current = { id }; showBar(id, 'blocked'); } }
+  try {
+    const q = new URLSearchParams(location.search).get('adzan');
+    if (q) { fromNotif(q); history.replaceState(null, '', location.pathname + location.hash); }
+  } catch (e) { /* abaikan */ }
+  if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', (e) => { if (e.data && e.data.type === 'adzan') fromNotif(e.data.id); });
 })();

@@ -14,7 +14,7 @@
     emit() { listeners.forEach((f) => { try { f(); } catch (e) { /* abaikan */ } }); }
   };
   window.QJSync = S;
-  if (!cfg) { S.init = async () => {}; S.signIn = async () => {}; S.signOut = async () => {}; S.push = () => {}; return; }
+  if (!cfg) { S.init = async () => {}; S.signIn = async () => {}; S.signOut = async () => {}; S.push = () => {}; S.saveDevice = async () => false; S.removeDevice = async () => false; S.deviceId = ''; return; }
 
   let mod = {}, auth, db, api, pushTimer, unsub, lastRemoteStamp = 0;
   const deviceId = (() => {
@@ -24,6 +24,18 @@
       return d;
     } catch (e) { return 'tanpa-penyimpanan'; }
   })();
+
+  S.deviceId = deviceId;
+  S.saveDevice = async function (data) {
+    if (!S.user || !db) return false;
+    await mod.setDoc(mod.doc(db, 'users', S.user.uid, 'devices', deviceId), data);
+    return true;
+  };
+  S.removeDevice = async function () {
+    if (!S.user || !db) return false;
+    await mod.deleteDoc(mod.doc(db, 'users', S.user.uid, 'devices', deviceId));
+    return true;
+  };
 
   function setStatus(t) { S.status = t; S.emit(); }
 

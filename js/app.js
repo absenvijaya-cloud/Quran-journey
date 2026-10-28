@@ -567,6 +567,20 @@
       '<div class="small" style="margin-top:8px;line-height:1.6">Tekan sekali tombol coba di atas agar HP mengizinkan suara. Adzan memakai jadwal asli; bila jadwal belum termuat, adzan tidak berbunyi.</div></div>';
     return h;
   }
+  function pushCard() {
+    const P = window.QJPush, sy = window.QJSync;
+    const sw1 = (on) => '<span class="swwrap"><button type="button" class="switch" role="switch" aria-checked="' + on + '" aria-label="Notifikasi waktu salat" data-act="pushon"></button></span>';
+    let body;
+    if (!P || !P.supported()) body = '<div class="setrow"><div class="lb"><b>Belum didukung</b><span>Browser atau HP ini belum mendukung notifikasi. Di iPhone, pasang dulu aplikasi ke layar utama lewat Safari (Bagikan → Tambah ke Layar Utama), lalu buka dari ikonnya.</span></div></div>';
+    else if (!sy || !sy.enabled || !P.ready()) body = '<div class="setrow"><div class="lb"><b>Belum diaktifkan</b><span>Fitur ini perlu Firebase dan pengirim notifikasi yang diaktifkan oleh pembuat aplikasi.</span></div></div>';
+    else if (!sy.user) body = '<div class="setrow"><div class="lb"><b>Masuk dengan Google dulu</b><span>Notifikasi dikirim lewat akun Anda. Masuk di bagian Akun &amp; sinkronisasi di atas.</span></div></div>';
+    else {
+      const on = !!P.cfg().on;
+      body = '<div class="setrow"><div class="lb"><b>Notifikasi waktu salat</b><span>Muncul di HP walau aplikasi ditutup. Bisa terlambat beberapa menit dan berbunyi nada notifikasi biasa, bukan adzan. Ketuk notifikasinya untuk memutar adzan.</span></div>' + sw1(on) + '</div>' +
+        (on ? '<div class="small" style="margin-top:4px">' + esc(P.status() || 'Menyiapkan…') + '</div><div class="btnrow"><button class="btn soft" type="button" data-act="pushtest">Coba notifikasi</button></div>' : '');
+    }
+    return '<div class="card sec"><h3>Notifikasi</h3>' + body + '</div>';
+  }
   function renderSettings() {
     const c = cityNow(), sy = window.QJSync;
     const opt = (v, l, cur) => '<option value="' + v + '"' + (String(cur) === String(v) ? ' selected' : '') + '>' + l + '</option>';
@@ -582,7 +596,7 @@
       '<div class="setrow"><div class="lb"><b>Kota manual</b></div><select id="selCity" aria-label="Pilih kota">' + (c.gps ? '<option value="" selected>Pilih…</option>' : '') + cityOpts + '</select></div>' +
       '<div class="setrow"><div class="lb"><b>Metode jadwal salat</b><span>Otomatis: Kemenag RI untuk Indonesia, Muslim World League di luar Indonesia. Pindah lokasi tidak mengubah pilihan Anda.</span></div><select id="selMethod" aria-label="Metode jadwal">' + opt('auto', 'Otomatis', S.settings.method) + opt(20, 'Kemenag RI', S.settings.method) + opt(3, 'Muslim World League', S.settings.method) + opt(4, 'Umm al-Qura', S.settings.method) + opt(2, 'ISNA', S.settings.method) + '</select></div>' +
       '<div class="setrow"><div class="lb"><b>Penyesuaian tanggal Hijriah</b><span>Gunakan bila penetapan resmi berbeda dari perkiraan. Saat aktif, aplikasi memberi tahu.</span></div><select id="selAdj" aria-label="Penyesuaian Hijriah">' + [-2, -1, 0, 1, 2].map((v) => opt(v, (v > 0 ? '+' : '') + v + ' hari', S.settings.hijriAdj)).join('') + '</select></div></div>' +
-      adzanCard() +
+      adzanCard() + pushCard() +
       '<div class="card sec"><h3>Tampilan</h3><div class="setrow"><div class="lb"><b>Suasana</b><span>Otomatis mengikuti Ramadan dan hari raya (perkiraan).</span></div><select id="selMood" aria-label="Suasana">' + opt('auto', 'Otomatis', S.settings.mood) + opt('biasa', 'Biasa', S.settings.mood) + opt('ramadan', 'Ramadan', S.settings.mood) + opt('eid', 'Idulfitri', S.settings.mood) + '</select></div>' +
       '<div class="setrow"><div class="lb"><b>Animasi</b><span>Ikuti pengaturan HP, kurangi, atau penuh.</span></div><select id="selMotion" aria-label="Animasi">' + opt('system', 'Ikuti sistem', S.settings.motion) + opt('reduce', 'Dikurangi', S.settings.motion) + opt('full', 'Penuh', S.settings.motion) + '</select></div>' +
       '<div class="setrow"><div class="lb"><b>Ukuran teks Arab</b><span id="arabVal">' + S.settings.arab + ' px</span></div><input id="rngArab" type="range" min="24" max="48" step="2" value="' + S.settings.arab + '" aria-label="Ukuran teks Arab" style="width:150px;accent-color:var(--champagne-deep)"></div>' +
@@ -646,6 +660,15 @@
       case 'kprev': kM--; if (kM < 1) { kM = 12; kY--; } renderKalender(); break;
       case 'knext': kM++; if (kM > 12) { kM = 1; kY++; } renderKalender(); break;
       case 'kpick': kSel = t.dataset.k; renderKalender(); break;
+      case 'pushon': {
+        const P = window.QJPush;
+        (P.cfg().on ? P.disable() : P.enable()).then(() => renderSettings()).catch((err) => {
+          const m = { 'belum-masuk': 'Masuk dengan Google dulu.', ditolak: 'Izin notifikasi ditolak. Aktifkan lewat pengaturan browser.', 'belum-didukung': 'Browser ini belum mendukung notifikasi.', 'tanpa-kunci': 'Kunci notifikasi belum dipasang.' }[err && err.message] || 'Notifikasi belum bisa diaktifkan.';
+          toast(m, true); renderSettings();
+        });
+        break;
+      }
+      case 'pushtest': window.QJPush.test().then(() => toast('Notifikasi contoh dikirim.', true)).catch(() => toast('Izin notifikasi belum diberikan.', true)); break;
       case 'adzanon': { const on = !(window.QJAdzan.cfg().on); window.QJAdzan.setOn(on); renderSettings(); break; }
       case 'adzanp': { const id = t.dataset.id; window.QJAdzan.setPrayer(id, !(window.QJAdzan.cfg()[id] !== false)); renderSettings(); break; }
       case 'adzantest': window.QJAdzan.test(t.dataset.id); break;
