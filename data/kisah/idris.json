@@ -1,0 +1,21 @@
+{
+  "id": "idris",
+  "name": "Nabi Idris a.s.",
+  "sub": "Nabi yang jujur dan sabar",
+  "parts": [
+    {
+      "h": "Apa yang disebut Al-Qur’an",
+      "t": "Kisah Nabi Idris dalam Al-Qur’an sangat ringkas. Ia disebut dua kali, dan keduanya hanya berupa pujian singkat. Allah menyebutnya sebagai seorang yang sangat jujur (shiddiq) dan seorang nabi, serta menyatakan bahwa Dia mengangkatnya ke tempat yang tinggi.\n\nDi tempat lain, Idris disebut bersama Ismail dan Dzulkifli sebagai orang-orang yang sabar, dan Allah memasukkan mereka ke dalam rahmat-Nya karena mereka termasuk orang-orang yang saleh.",
+      "r": [[19, 56, 57], [21, 85, 86]]
+    },
+    {
+      "h": "Tentang riwayat-riwayat lain",
+      "t": "Dalam kitab-kitab kisah para nabi terdapat banyak cerita tentang Idris, misalnya bahwa ia orang pertama yang menulis atau menjahit pakaian. Cerita-cerita itu tidak berasal dari Al-Qur’an, dan para ulama menilai sebagian riwayatnya lemah. Karena itu, aplikasi ini hanya memuat apa yang disebut Al-Qur’an. Jika Anda ingin mendalami riwayat tambahannya, bacalah kitab kisah para nabi bersama guru yang menguasainya.",
+      "r": []
+    }
+  ],
+  "hikmah": [
+    "Tidak semua nabi diceritakan panjang, tetapi setiap sebutan dalam Al-Qur’an punya makna.",
+    "Kejujuran dan kesabaran adalah sifat yang Allah muliakan."
+  ]
+}
