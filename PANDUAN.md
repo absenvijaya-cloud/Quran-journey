@@ -95,3 +95,10 @@ Naikkan angka `VERSI` di `sw.js` (satu baris di atas file). Tanpa itu, HP yang s
 - Setiap bagian cerita punya "Ayat rujukan" yang menampilkan teks Arab dan terjemahan Kemenag asli.
 - Ringkasannya disusun berdasarkan ayat Al-Qur'an, bukan tafsir resmi. **Sebelum dijual ke klien, mintalah seorang ustaz/ustazah meninjau isinya.** Bila ada yang perlu diubah, edit langsung file JSON nabi terkait.
 - Menambah nabi baru: salin satu file JSON sebagai contoh, isi `parts` (h = judul, t = isi, r = daftar [surah, ayat awal, ayat akhir]), lalu tambahkan ke `data/kisah/index.json` dan naikkan `VERSI` di `sw.js`.
+
+## Adzan otomatis
+
+- Pengaturan → bagian **Adzan**. Saklar utama menyalakan adzan, lalu tiap waktu salat bisa dinyalakan atau dimatikan sendiri.
+- Subuh memakai `data/adzan/fajr.mp3`, waktu lain memakai `data/adzan/makkah.mp3`. Untuk mengganti suara, ganti file dengan nama yang sama lalu naikkan `VERSI` di `sw.js`.
+- Adzan hanya berbunyi saat aplikasi terbuka, dan hanya memakai jadwal asli (bukan jadwal contoh). Satu kali per waktu salat per hari.
+- Sebelum dijual, pastikan izin pemakaian rekaman adzan. Sumbernya repositori `adhan-audio` yang tidak mencantumkan lisensi.

@@ -1,10 +1,10 @@
 /* Service worker Quran Journey: simpan kerangka aplikasi dan data surah agar bisa dibuka offline.
    Naikkan angka VERSI setiap kali Anda mengganti file aplikasi, supaya HP pengguna ikut memperbarui. */
-const VERSI = 'qj-v3';
+const VERSI = 'qj-v4';
 const KERANGKA = [
   './', './index.html', './manifest.webmanifest',
   './css/style.css', './js/app.js', './js/core.js', './js/sync.js', './js/firebase-config.js',
-  './data/surah-list.json', './data/kisah/index.json',
+  './data/surah-list.json', './data/kisah/index.json', './js/adzan.js', './data/adzan/fajr.mp3', './data/adzan/makkah.mp3',
   './icons/icon-192.png', './icons/icon-512.png', './icons/favicon-64.png', './icons/apple-touch-icon.png'
 ];
 
@@ -24,7 +24,7 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
 
   // Audio, jadwal salat, dan layanan Firebase: jangan disimpan di sini.
-  if (/\.(m4a|aac|mp3)$/i.test(url.pathname)) return;
+  if (/\.(m4a|aac|mp3)$/i.test(url.pathname) && !url.pathname.includes('/data/adzan/')) return;
   if (url.hostname.includes('aladhan.com') || url.hostname.includes('bigdatacloud') ||
       url.hostname.includes('googleapis.com') && url.hostname !== 'fonts.googleapis.com' ||
       url.hostname.includes('firebase') || url.hostname.includes('gstatic.com') && url.pathname.includes('firebasejs')) return;
@@ -40,7 +40,7 @@ self.addEventListener('fetch', (e) => {
   if (url.origin !== location.origin) return;
 
   // Data surah: simpan saat pertama dibuka, lalu pakai dari simpanan.
-  if ((url.pathname.includes('/data/surah/') || url.pathname.includes('/data/kisah/'))) {
+  if ((url.pathname.includes('/data/surah/') || url.pathname.includes('/data/kisah/') || url.pathname.includes('/data/adzan/'))) {
     e.respondWith(
       caches.open(VERSI).then((c) => c.match(req).then((hit) => hit || fetch(req).then((r) => { if (r.ok) c.put(req, r.clone()); return r; })))
     );

@@ -47,7 +47,8 @@
   const defaults = () => ({
     settings: {
       city: { name: 'Jakarta', country: 'Indonesia', lat: -6.2088, lon: 106.8456, tz: 'Asia/Jakarta', gps: false },
-      locAsked: false, method: 'auto', hijriAdj: 0, mood: 'auto', motion: 'system', arab: 30, view: 'terj'
+      locAsked: false, method: 'auto', hijriAdj: 0, mood: 'auto', motion: 'system', arab: 30, view: 'terj',
+      adzan: { on: false, subuh: true, zuhur: true, asar: true, magrib: true, isya: true }
     },
     marks: {}, fast: {}, bm: {}, last: { s: 1, a: 1 }, fastType: 'sunah', ts: 0
   });

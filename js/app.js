@@ -59,7 +59,7 @@
   function route() {
     if (cleanup) { cleanup(); cleanup = null; }
     const r = parseHash();
-    const tab = (r.name === 'read' || r.name === 'kisah') ? 'quran' : r.name === 'settings' ? 'home' : r.name;
+    const tab = r.name === 'read' ? 'quran' : r.name === 'settings' ? 'home' : r.name;
     $$('#nav a').forEach((a, i) => {
       if (a.dataset.tab === tab) { a.setAttribute('aria-current', 'page'); $('#navDot').style.transform = 'translateX(' + (i * 100) + '%)'; }
       else a.removeAttribute('aria-current');
@@ -260,7 +260,7 @@
 
     // teks
     const gm = Math.floor(nowMin);
-    $('#greet').textContent = gm < 660 ? 'Selamat pagi' : gm < 900 ? 'Selamat siang' : gm < 1080 ? 'Selamat sore' : 'Selamat malam';
+    $('#greet').textContent = 'Assalamualaikum';
     const hj = hij(today);
     $('#dateTxt').textContent = QJ.fmtLong(today) + (hj ? ' · ≈ ' + hj.d + ' ' + hj.name + ' ' + hj.y + ' H' : '');
     $('#tzTxt').textContent = '· ' + tzLabel(cityNow().tz);
@@ -314,13 +314,9 @@
   }
   loadSurahs().then(() => { if ($('#resTxt')) tickHome(false); }).catch(() => {});
 
-  const quranSeg = (on) => '<div class="seg" role="group" aria-label="Pilih isi"><button type="button" data-go="#/quran" aria-pressed="' + (on === 'surah') + '">Surah</button><button type="button" data-go="#/quran/kisah" aria-pressed="' + (on === 'kisah') + '">Kisah Nabi</button></div>';
-  const bindSeg = () => $$('[data-go]', view).forEach((b) => b.addEventListener('click', () => go(b.dataset.go)));
-
   async function renderQuran(r) {
-    if (r && r.a === 'kisah') return renderKisahList();
     view.className = 'view';
-    view.innerHTML = '<div class="page"><div class="topbar"><div><div class="h1">Al-Qur\'an</div></div></div>' + quranSeg('surah') + '<div class="sub" style="margin-top:10px">114 surah · teks dan terjemahan Bahasa Indonesia dari Kemenag RI</div>' +
+    view.innerHTML = '<div class="page"><div class="topbar"><div><div class="h1">Al-Qur\'an</div></div></div>' + '<div class="sub">114 surah · teks dan terjemahan Bahasa Indonesia dari Kemenag RI</div>' +
       '<label class="sr" for="q">Cari surah</label><input id="q" class="search" type="search" placeholder="Cari nama atau nomor surah" autocomplete="off"><div class="surah-list" id="sl"><div class="small" style="text-align:center;padding:20px">Memuat…</div></div></div>';
     try { await loadSurahs(); } catch (e) { $('#sl').innerHTML = '<div class="notice">Daftar surah belum bisa dimuat. Periksa koneksi lalu coba lagi.</div>'; return; }
     const draw = (q) => {
@@ -328,7 +324,7 @@
       const list = surahs.filter((s) => !t || String(s.id) === t || s.name.toLowerCase().includes(t) || s.meaning.toLowerCase().includes(t) || s.name.toLowerCase().replace(/[-'‘’]/g, '').includes(t.replace(/[-'‘’]/g, '')));
       $('#sl').innerHTML = list.length ? list.map((s) => '<a class="surah row" href="#/read/' + s.id + '"><span class="badge">' + s.id + '</span><span class="nm"><strong>' + esc(s.name) + '</strong><span>' + esc(s.meaning) + ' · ' + s.count + ' ayat · ' + esc(s.place) + '</span></span><span class="ar" lang="ar" dir="rtl">' + esc(s.ar) + '</span></a>').join('') : '<div class="notice">Tidak ada surah yang cocok.</div>';
     };
-    draw(''); $('#q').addEventListener('input', (e) => draw(e.target.value)); bindSeg();
+    draw(''); $('#q').addEventListener('input', (e) => draw(e.target.value)); 
   }
 
   /* ================= KISAH NABI ================= */
@@ -337,9 +333,8 @@
   const KISAH_NOTE = 'Ringkasan ini disusun berdasarkan ayat-ayat Al-Qur\'an dan bukan tafsir resmi. Rujukan ayat ditampilkan agar Anda dapat memeriksa sendiri.';
   async function renderKisahList() {
     view.className = 'view';
-    view.innerHTML = '<div class="page"><div class="topbar"><div><div class="h1">Al-Qur\'an</div></div></div>' + quranSeg('kisah') +
-      '<div class="sub" style="margin-top:10px">Kisah para nabi, disusun dari ayat-ayat Al-Qur\'an</div><label class="sr" for="kq">Cari nabi</label><input id="kq" class="search" type="search" placeholder="Cari nama nabi" autocomplete="off"><div class="surah-list" id="kl"><div class="small" style="text-align:center;padding:20px">Memuat…</div></div><div class="notice" style="margin-top:14px">' + esc(KISAH_NOTE) + '</div></div>';
-    bindSeg();
+    view.innerHTML = '<div class="page"><div class="topbar"><div><div class="h1">Kisah Nabi</div></div></div>' +
+      '<div class="sub">Kisah para nabi, disusun dari ayat-ayat Al-Qur\'an</div><label class="sr" for="kq">Cari nabi</label><input id="kq" class="search" type="search" placeholder="Cari nama nabi" autocomplete="off"><div class="surah-list" id="kl"><div class="small" style="text-align:center;padding:20px">Memuat…</div></div><div class="notice" style="margin-top:14px">' + esc(KISAH_NOTE) + '</div></div>';
     try { if (!kisahIdx) kisahIdx = await (await fetch('data/kisah/index.json')).json(); }
     catch (e) { $('#kl').innerHTML = '<div class="notice">Daftar kisah belum bisa dimuat. Periksa koneksi lalu coba lagi.</div>'; return; }
     const draw = (q) => {
@@ -351,9 +346,10 @@
   }
 
   async function renderKisah(r) {
+    if (!r.a) return renderKisahList();
     view.className = 'view';
     view.innerHTML = '<div class="page"><div class="notice">Memuat kisah…</div></div>';
-    const back = '<a class="icon-btn" href="#/quran/kisah" aria-label="Kembali ke daftar kisah">' + ICO.back + '</a>';
+    const back = '<a class="icon-btn" href="#/kisah" aria-label="Kembali ke daftar kisah">' + ICO.back + '</a>';
     let d;
     try {
       const id = String(r.a || '').replace(/[^a-z]/g, '');
@@ -435,6 +431,8 @@
     view.addEventListener('scroll', onScroll);
     cleanup = () => { view.removeEventListener('scroll', onScroll); cur.draw = null; };
   }
+
+  window.addEventListener('qj:adzan-start', () => { try { audio.pause(); player.playing = false; renderMini(); markPlaying(); } catch (e) { /* abaikan */ } });
 
   /* ================= pemutar audio ================= */
   const audio = new Audio();
@@ -536,17 +534,19 @@
     let cells = ''; for (let i = 0; i < lead; i++) cells += '<span></span>';
     for (let d = 1; d <= dim; d++) {
       const k = QJ.key(kY, kM, d), h = hij(k), ev = h && QJ.eventOf(h), ft = S.fast[k];
-      cells += '<button type="button" class="day' + (k === today ? ' today' : '') + (k === kSel ? ' sel' : '') + '" data-act="kpick" data-k="' + k + '" aria-pressed="' + (k === kSel) + '" aria-label="' + QJ.fmtLong(k) + (ev ? ', ' + ev : '') + '"><span class="g">' + d + '</span><span class="h">' + (h ? h.d : '') + '</span>' + (ev ? '<i class="dot"></i>' : '') + (ft ? '<span class="tag">' + ft[0].toUpperCase() + '</span>' : '') + '</button>';
+      cells += '<button type="button" class="day ' + (h && h.m % 2 ? 'ma' : 'mb') + (h && h.d === 1 ? ' first' : '') + (k === today ? ' today' : '') + (k === kSel ? ' sel' : '') + '" data-act="kpick" data-k="' + k + '" aria-pressed="' + (k === kSel) + '" aria-label="' + QJ.fmtLong(k) + (ev ? ', ' + ev : '') + '"><span class="g">' + d + '</span><span class="h">' + (h ? h.d : '') + '</span>' + (ev ? '<i class="dot"></i>' : '') + (ft ? '<span class="tag">' + ft[0].toUpperCase() + '</span>' : '') + '</button>';
     }
     const hs = hij(QJ.key(kY, kM, 1)), he = hij(QJ.key(kY, kM, dim));
     const hr = hs && he ? (hs.name === he.name ? hs.name + ' ' + hs.y + ' H' : hs.name + ' – ' + he.name + ' ' + he.y + ' H') : '';
+    const legend = []; for (let d = 1; d <= dim; d++) { const hh = hij(QJ.key(kY, kM, d)); if (hh && !legend.some((x) => x.m === hh.m)) legend.push({ m: hh.m, name: hh.name, y: hh.y }); }
+    const legHTML = '<div class="cal-leg">' + legend.map((x) => '<span><i class="sw ' + (x.m % 2 ? 'ma' : 'mb') + '"></i>' + esc(x.name) + ' ' + x.y + '</span>').join('') + '</div>';
     const selH = hij(kSel), selEv = selH && QJ.eventOf(selH);
     const rd = QJ.daysToRamadan(today, S.settings.hijriAdj);
     const up = QJ.upcoming(today, S.settings.hijriAdj, 6);
     view.className = 'view';
-    view.innerHTML = '<div class="page"><div class="h1">Kalender</div><div class="sub">Masehi dengan tanggal Hijriah kecil di bawahnya</div>' +
+    view.innerHTML = '<div class="page"><div class="h1">Kalender</div><div class="sub">Angka besar = Masehi · angka cokelat di bawahnya = Hijriah</div>' +
       '<div class="card cal"><div class="cal-head"><button type="button" class="icon-btn" data-act="kprev" aria-label="Bulan sebelumnya">' + ICO.back + '</button><div><strong>' + QJ.BULAN[kM - 1] + ' ' + kY + '</strong><span>≈ ' + hr + '</span></div><button type="button" class="icon-btn" data-act="knext" aria-label="Bulan berikutnya">' + ICO.next + '</button></div>' +
-      '<div class="cal-dow"><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span></div><div class="cal-grid">' + cells + '</div></div>' +
+      legHTML + '<div class="cal-dow"><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span></div><div class="cal-grid">' + cells + '</div></div>' +
       '<div class="infocard"><b>' + QJ.fmtLong(kSel) + '</b><p>≈ ' + hijText(kSel) + (selEv ? ' · <b style="color:var(--text)">' + esc(selEv) + '</b>' : '') + '</p></div>' +
       (rd != null ? '<div class="card" style="margin-top:12px;padding:14px 16px;display:flex;gap:14px;align-items:center">' + ICO.moon + '<div><b style="font-size:15px">' + (rd === 0 ? 'Hari ini awal Ramadan (perkiraan)' : 'Ramadan ± ' + rd + ' hari lagi') + '</b><div class="small" style="line-height:1.5">Perkiraan awal ' + QJ.fmtLong(QJ.addDays(today, rd)) + '. Tanggal resmi menunggu penetapan Kemenag.</div></div></div>' : '') +
       '<div class="card" style="margin-top:12px;padding:8px 14px"><div style="padding:8px 0 2px"><b style="font-size:15px">Hari penting berikutnya</b></div>' + up.map((e) => '<div class="event"><div class="dt">' + parseInt(e.key.slice(8), 10) + ' ' + QJ.BULAN[parseInt(e.key.slice(5, 7), 10) - 1].slice(0, 3) + '</div><div><div class="nm">' + esc(e.name) + '</div><div class="ex">' + (e.days === 0 ? 'Hari ini' : e.days + ' hari lagi') + ' · perkiraan</div></div></div>').join('') + '</div>' +
@@ -556,6 +556,17 @@
   /* ================= PENGATURAN ================= */
   let installEvt = null, wipeArmed = false;
   window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; if (parseHash().name === 'settings') route(); });
+  function adzanCard() {
+    const ad = window.QJAdzan ? window.QJAdzan.cfg() : { on: false };
+    const sw1 = (act, on, label, id) => '<span class="swwrap"><button type="button" class="switch" role="switch" aria-checked="' + on + '" aria-label="' + label + '" data-act="' + act + '"' + (id ? ' data-id="' + id + '"' : '') + '></button></span>';
+    let h = '<div class="card sec"><h3>Adzan</h3><div class="setrow"><div class="lb"><b>Adzan otomatis</b><span>Berbunyi saat masuk waktu salat selama aplikasi terbuka. Jika aplikasi ditutup atau HP terkunci, adzan belum bisa berbunyi.</span></div>' + sw1('adzanon', !!ad.on, 'Adzan otomatis') + '</div>';
+    if (ad.on) {
+      h += QJ.PRAYERS.map((p) => '<div class="setrow"><div class="lb"><b>' + p.name + '</b></div>' + sw1('adzanp', ad[p.id] !== false, 'Adzan ' + p.name, p.id) + '</div>').join('');
+    }
+    h += '<div class="btnrow"><button class="btn soft" type="button" data-act="adzantest" data-id="subuh">Coba adzan Subuh</button><button class="btn soft" type="button" data-act="adzantest" data-id="zuhur">Coba adzan biasa</button></div>' +
+      '<div class="small" style="margin-top:8px;line-height:1.6">Tekan sekali tombol coba di atas agar HP mengizinkan suara. Adzan memakai jadwal asli; bila jadwal belum termuat, adzan tidak berbunyi.</div></div>';
+    return h;
+  }
   function renderSettings() {
     const c = cityNow(), sy = window.QJSync;
     const opt = (v, l, cur) => '<option value="' + v + '"' + (String(cur) === String(v) ? ' selected' : '') + '>' + l + '</option>';
@@ -571,6 +582,7 @@
       '<div class="setrow"><div class="lb"><b>Kota manual</b></div><select id="selCity" aria-label="Pilih kota">' + (c.gps ? '<option value="" selected>Pilih…</option>' : '') + cityOpts + '</select></div>' +
       '<div class="setrow"><div class="lb"><b>Metode jadwal salat</b><span>Otomatis: Kemenag RI untuk Indonesia, Muslim World League di luar Indonesia. Pindah lokasi tidak mengubah pilihan Anda.</span></div><select id="selMethod" aria-label="Metode jadwal">' + opt('auto', 'Otomatis', S.settings.method) + opt(20, 'Kemenag RI', S.settings.method) + opt(3, 'Muslim World League', S.settings.method) + opt(4, 'Umm al-Qura', S.settings.method) + opt(2, 'ISNA', S.settings.method) + '</select></div>' +
       '<div class="setrow"><div class="lb"><b>Penyesuaian tanggal Hijriah</b><span>Gunakan bila penetapan resmi berbeda dari perkiraan. Saat aktif, aplikasi memberi tahu.</span></div><select id="selAdj" aria-label="Penyesuaian Hijriah">' + [-2, -1, 0, 1, 2].map((v) => opt(v, (v > 0 ? '+' : '') + v + ' hari', S.settings.hijriAdj)).join('') + '</select></div></div>' +
+      adzanCard() +
       '<div class="card sec"><h3>Tampilan</h3><div class="setrow"><div class="lb"><b>Suasana</b><span>Otomatis mengikuti Ramadan dan hari raya (perkiraan).</span></div><select id="selMood" aria-label="Suasana">' + opt('auto', 'Otomatis', S.settings.mood) + opt('biasa', 'Biasa', S.settings.mood) + opt('ramadan', 'Ramadan', S.settings.mood) + opt('eid', 'Idulfitri', S.settings.mood) + '</select></div>' +
       '<div class="setrow"><div class="lb"><b>Animasi</b><span>Ikuti pengaturan HP, kurangi, atau penuh.</span></div><select id="selMotion" aria-label="Animasi">' + opt('system', 'Ikuti sistem', S.settings.motion) + opt('reduce', 'Dikurangi', S.settings.motion) + opt('full', 'Penuh', S.settings.motion) + '</select></div>' +
       '<div class="setrow"><div class="lb"><b>Ukuran teks Arab</b><span id="arabVal">' + S.settings.arab + ' px</span></div><input id="rngArab" type="range" min="24" max="48" step="2" value="' + S.settings.arab + '" aria-label="Ukuran teks Arab" style="width:150px;accent-color:var(--champagne-deep)"></div>' +
@@ -579,7 +591,7 @@
       '<div class="card sec"><h3>Akun & sinkronisasi</h3>' + acct + '</div>' +
       '<div class="card sec"><h3>Aplikasi</h3>' + (standalone ? '<div class="setrow"><div class="lb"><b>Sudah terpasang</b><span>Anda memakai aplikasi dari layar utama.</span></div></div>' : installEvt ? '<div class="btnrow"><button class="btn" type="button" data-act="install">Pasang aplikasi ke layar utama</button></div>' : '<div class="setrow"><div class="lb"><b>Pasang ke layar utama</b><span>' + (isIOS ? 'Di iPhone/iPad: ketuk tombol Bagikan di Safari, lalu “Tambah ke Layar Utama”.' : 'Gunakan menu browser, lalu “Instal aplikasi” atau “Tambahkan ke layar utama”.') + '</span></div></div>') + '</div>' +
       '<div class="card sec"><h3>Data Anda</h3><div class="setrow"><div class="lb"><span>Catatan salat, puasa, dan bookmark tersimpan di perangkat ini' + (QJ.memoryOnly ? ' <b>(penyimpanan browser dimatikan, data hilang saat ditutup)</b>' : '') + '. Tidak ada yang dikirim ke server kecuali Anda masuk dengan Google.</span></div></div><div class="btnrow"><button class="btn soft" type="button" data-act="export">Cadangkan (unduh)</button><label class="btn soft" style="cursor:pointer">Pulihkan<input type="file" id="fileImp" accept="application/json" class="sr"></label><button class="btn danger" type="button" data-act="wipe">' + (wipeArmed ? 'Ketuk lagi untuk menghapus' : 'Hapus semua data') + '</button></div></div>' +
-      '<div class="card sec"><h3>Tentang & sumber data</h3><div class="setrow"><div class="lb"><span style="line-height:1.6">Teks Arab dan terjemahan Indonesia: Kementerian Agama RI (quran.kemenag.go.id). Audio murattal: Abu Bakr Ash-Shaatree melalui media.qurankemenag.net. Jadwal salat: Aladhan (aladhan.com) dengan metode yang Anda pilih. Tanggal Hijriah: kalender Umm al-Qura (perkiraan). Tafsir belum tersedia. Kisah Nabi: ringkasan yang disusun dari ayat-ayat Al-Qur\'an, bukan tafsir resmi.<br>Quran Journey v1.0 · Tahap 1</span></div></div></div></div>';
+      '<div class="card sec"><h3>Tentang & sumber data</h3><div class="setrow"><div class="lb"><span style="line-height:1.6">Teks Arab dan terjemahan Indonesia: Kementerian Agama RI (quran.kemenag.go.id). Audio murattal: Abu Bakr Ash-Shaatree melalui media.qurankemenag.net. Jadwal salat: Aladhan (aladhan.com) dengan metode yang Anda pilih. Tanggal Hijriah: kalender Umm al-Qura (perkiraan). Tafsir belum tersedia. Adzan: rekaman dari repositori adhan-audio. Kisah Nabi: ringkasan yang disusun dari ayat-ayat Al-Qur\'an, bukan tafsir resmi.<br>Quran Journey v1.0 · Tahap 1</span></div></div></div></div>';
     $('#selCity').addEventListener('change', (e) => { const x = QJ.CITIES.find((q) => q.name === e.target.value); if (x) { QJ.setCity(x); refreshLocation(); } });
     $('#selMethod').addEventListener('change', (e) => { S.settings.method = e.target.value; QJ.save(); refreshTimes(true); });
     $('#selAdj').addEventListener('change', (e) => { S.settings.hijriAdj = Number(e.target.value); QJ.save(); toast('Penyesuaian Hijriah: ' + (S.settings.hijriAdj > 0 ? '+' : '') + S.settings.hijriAdj + ' hari'); });
@@ -634,6 +646,9 @@
       case 'kprev': kM--; if (kM < 1) { kM = 12; kY--; } renderKalender(); break;
       case 'knext': kM++; if (kM > 12) { kM = 1; kY++; } renderKalender(); break;
       case 'kpick': kSel = t.dataset.k; renderKalender(); break;
+      case 'adzanon': { const on = !(window.QJAdzan.cfg().on); window.QJAdzan.setOn(on); renderSettings(); break; }
+      case 'adzanp': { const id = t.dataset.id; window.QJAdzan.setPrayer(id, !(window.QJAdzan.cfg()[id] !== false)); renderSettings(); break; }
+      case 'adzantest': window.QJAdzan.test(t.dataset.id); break;
       case 'prevsw': preview = !preview; renderSettings(); break;
       case 'replay': go('#/home'); startSplash(); break;
       case 'install': if (installEvt) { installEvt.prompt(); installEvt.userChoice.finally(() => { installEvt = null; route(); }); } break;
