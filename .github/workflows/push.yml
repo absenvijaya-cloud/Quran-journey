@@ -5,6 +5,9 @@ on:
     - cron: '*/5 * * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: kirim-notifikasi
   cancel-in-progress: false
@@ -19,7 +22,7 @@ jobs:
         with:
           node-version: 20
       - name: Pasang paket
-        run: npm install --omit=dev --no-audit --no-fund --prefix push
+        run: npm install --omit=dev --ignore-scripts --no-audit --no-fund --prefix push
       - name: Kirim
         run: node push/send.js
         env:
