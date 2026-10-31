@@ -1,6 +1,6 @@
 /* Service worker Quran Journey: simpan kerangka aplikasi dan data surah agar bisa dibuka offline.
    Naikkan angka VERSI setiap kali Anda mengganti file aplikasi, supaya HP pengguna ikut memperbarui. */
-const VERSI = 'qj-v7';
+const VERSI = 'qj-v8';
 const KERANGKA = [
   './', './index.html', './manifest.webmanifest',
   './css/style.css', './js/app.js', './js/core.js', './js/sync.js', './js/firebase-config.js',

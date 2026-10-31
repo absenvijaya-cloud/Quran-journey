@@ -3,7 +3,7 @@
   --bg:#FAF7F1; --surface:#FFFCF6; --sand:#E8DCC8; --sand-soft:#F1E8D8; --champagne:#D4B27A; --champagne-deep:#A87935;
   --brown:#8B6F47; --text:#2F2B26; --muted:#70685C; --border:#E7DDCE; --success:#5E8073; --error:#A54E45;
   --serif:'Fraunces',Georgia,'Times New Roman',serif; --sans:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
-  --arab:'Amiri Quran','Noto Naskh Arabic','Traditional Arabic','Geeza Pro',serif;
+  --arab:'Amiri Quran','Scheherazade New','Noto Naskh Arabic','Traditional Arabic','Geeza Pro',serif;
   --nav-h:72px;
 }
 *{box-sizing:border-box}
