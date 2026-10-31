@@ -77,6 +77,20 @@
   // pastikan tersimpan saat halaman ditutup
   window.addEventListener('pagehide', () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* abaikan */ } });
 
+  /* Pemeriksaan data dari luar (file cadangan, data akun): hanya bentuk yang dikenal yang dipakai. */
+  const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
+  function cleanCity(c) {
+    const o = { ...defaults().settings.city };
+    if (!isObj(c)) return o;
+    if (typeof c.name === 'string' && c.name) o.name = c.name.slice(0, 80);
+    if (typeof c.country === 'string') o.country = c.country.slice(0, 80);
+    if (Number.isFinite(c.lat) && Math.abs(c.lat) <= 90) o.lat = c.lat;
+    if (Number.isFinite(c.lon) && Math.abs(c.lon) <= 180) o.lon = c.lon;
+    if (typeof c.tz === 'string') { try { new Intl.DateTimeFormat('en', { timeZone: c.tz }); o.tz = c.tz; } catch (e) { /* tetap memakai bawaan */ } }
+    if (typeof c.gps === 'boolean') o.gps = c.gps;
+    return o;
+  }
+
   /* Bahan untuk sinkronisasi */
   const SYNC_SETTINGS = ['city', 'method', 'hijriAdj', 'mood', 'arab'];
   QJ.exportState = () => {
@@ -95,7 +109,7 @@
     if (!r) return;
     state.marks = r.marks || {}; state.fast = r.fast || {}; state.bm = r.bm || {};
     if (r.last) state.last = r.last;
-    if (r.settings) SYNC_SETTINGS.forEach((k) => { if (r.settings[k] !== undefined) state.settings[k] = r.settings[k]; });
+    if (r.settings) SYNC_SETTINGS.forEach((k) => { if (r.settings[k] !== undefined) state.settings[k] = k === 'city' ? cleanCity(r.settings[k]) : r.settings[k]; });
     QJ.save(true); QJ.emit();
   };
   QJ.on = (fn) => QJ.listeners.push(fn);
@@ -107,9 +121,38 @@
     try { localStorage.removeItem(KEY); localStorage.removeItem('qj.times'); } catch (e) { /* abaikan */ }
     QJ.emit();
   };
+  /* Ganti akun di perangkat yang sama: catatan akun sebelumnya disimpan terpisah di perangkat
+     (qj.cadangan), lalu aplikasi dimulai bersih agar tidak tercampur ke akun baru. */
+  QJ.switchOwner = (uid) => {
+    let reset = false;
+    try {
+      const prev = localStorage.getItem('qj.owner');
+      if (prev && prev !== uid) {
+        try { localStorage.setItem('qj.cadangan', JSON.stringify({ owner: prev, at: Date.now(), data: state })); } catch (e) { /* abaikan */ }
+        const d = defaults();
+        Object.keys(state).forEach((k) => delete state[k]);
+        Object.assign(state, d);
+        ['qj.times', 'qj.adzan', 'qj.pushsig'].forEach((k) => localStorage.removeItem(k));
+        localStorage.setItem(KEY, JSON.stringify(state));
+        reset = true;
+      }
+      localStorage.setItem('qj.owner', uid);
+    } catch (e) { /* abaikan */ }
+    if (reset) QJ.emit();
+    return reset;
+  };
   QJ.importAll = (obj) => {
     const d = defaults();
-    const merged = { ...d, ...obj, settings: { ...d.settings, ...(obj.settings || {}), city: { ...d.settings.city, ...((obj.settings || {}).city || {}) } } };
+    const s = isObj(obj.settings) ? obj.settings : {};
+    const merged = {
+      ...d,
+      marks: isObj(obj.marks) ? obj.marks : d.marks,
+      fast: isObj(obj.fast) ? obj.fast : d.fast,
+      bm: isObj(obj.bm) ? obj.bm : d.bm,
+      last: isObj(obj.last) ? obj.last : d.last,
+      fastType: typeof obj.fastType === 'string' ? obj.fastType : d.fastType,
+      settings: { ...d.settings, ...s, city: cleanCity(s.city) }
+    };
     Object.keys(state).forEach((k) => delete state[k]);
     Object.assign(state, merged);
     QJ.save(); QJ.emit();

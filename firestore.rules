@@ -1,14 +1,53 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Setiap pengguna hanya boleh membaca dan menulis catatannya sendiri.
+
+    function masuk(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Catatan pengguna: hanya bentuk yang dikirim aplikasi, dengan batas ukuran.
+    function catatanValid(d) {
+      return d.keys().hasOnly(['state', 'updatedAt', 'device'])
+        && d.keys().hasAll(['state', 'updatedAt', 'device'])
+        && d.updatedAt is number
+        && d.device is string && d.device.size() <= 80
+        && d.state is map
+        && d.state.keys().hasOnly(['marks', 'fast', 'bm', 'last', 'settings'])
+        && (!('marks' in d.state) || (d.state.marks is map && d.state.marks.size() <= 5000))
+        && (!('fast' in d.state) || (d.state.fast is map && d.state.fast.size() <= 5000))
+        && (!('bm' in d.state) || (d.state.bm is map && d.state.bm.size() <= 3000))
+        && (!('last' in d.state) || d.state.last == null || d.state.last is map)
+        && (!('settings' in d.state) || d.state.settings is map);
+    }
+
+    // Perangkat untuk notifikasi: alamat notifikasi hanya boleh milik layanan resmi browser.
+    function perangkatValid(d) {
+      return d.keys().hasOnly(['enabled', 'sub', 'tz', 'city', 'times', 'updatedAt'])
+        && d.keys().hasAll(['sub', 'tz', 'times', 'updatedAt'])
+        && d.updatedAt is number
+        && d.tz is string && d.tz.size() <= 64
+        && (!('city' in d) || (d.city is string && d.city.size() <= 120))
+        && (!('enabled' in d) || d.enabled is bool)
+        && d.times is map && d.times.size() <= 40
+        && d.sub is map
+        && d.sub.keys().hasOnly(['endpoint', 'keys'])
+        && d.sub['endpoint'] is string && d.sub['endpoint'].size() <= 700
+        && d.sub['endpoint'].matches('^https://(fcm\\.googleapis\\.com|updates\\.push\\.services\\.mozilla\\.com|web\\.push\\.apple\\.com|([a-z0-9-]+\\.)+push\\.apple\\.com|([a-z0-9-]+\\.)+notify\\.windows\\.com)/.*')
+        && d.sub['keys'] is map
+        && d.sub['keys'].keys().hasOnly(['p256dh', 'auth']);
+    }
+
     match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, delete: if masuk(uid);
+      allow create, update: if masuk(uid) && catatanValid(request.resource.data);
     }
-    // Data perangkat untuk notifikasi: hanya milik pengguna itu sendiri.
+
     match /users/{uid}/devices/{dev} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, delete: if masuk(uid);
+      allow create, update: if masuk(uid) && dev.size() <= 60 && perangkatValid(request.resource.data);
     }
+
     // Selain itu, semuanya tertutup.
     match /{document=**} {
       allow read, write: if false;

@@ -54,7 +54,7 @@
       try { await mod.getRedirectResult(auth); } catch (e) { /* abaikan */ }
       mod.onAuthStateChanged(auth, (u) => {
         S.user = u ? { uid: u.uid, name: u.displayName || '', email: u.email || '' } : null;
-        if (u) { setStatus('Menyambung…'); start(u.uid); }
+        if (u) { if (window.QJ && window.QJ.switchOwner) window.QJ.switchOwner(u.uid); setStatus('Menyambung…'); start(u.uid); }
         else { if (unsub) { unsub(); unsub = null; } setStatus('Belum masuk'); }
         S.emit();
       });
@@ -120,6 +120,9 @@
   };
 
   S.signOut = async function () {
-    if (auth) await mod.signOut(auth);
+    if (!auth) return;
+    // Lepas notifikasi perangkat ini dari akun yang sedang keluar (harus dilakukan selagi masih masuk).
+    try { if (window.QJPush) await window.QJPush.disable(); else await S.removeDevice(); } catch (e) { /* abaikan */ }
+    await mod.signOut(auth);
   };
 })();

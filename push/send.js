@@ -13,6 +13,14 @@ function localNow(tz, nowMs) {
     .formatToParts(new Date(nowMs)).forEach((x) => { p[x.type] = x.value; });
   return { key: p.year + '-' + p.month + '-' + p.day, min: Number(p.hour) * 60 + Number(p.minute) };
 }
+/* Hanya layanan notifikasi resmi browser yang boleh dihubungi (mencegah alamat sembarang dari data pengguna). */
+const PUSH_HOSTS = /^(fcm\.googleapis\.com|updates\.push\.services\.mozilla\.com|web\.push\.apple\.com|([a-z0-9-]+\.)+push\.apple\.com|([a-z0-9-]+\.)+notify\.windows\.com)$/;
+function endpointOk(url) {
+  try {
+    const u = new URL(url);
+    return u.protocol === 'https:' && !u.port && !u.username && !u.password && PUSH_HOSTS.test(u.hostname);
+  } catch (e) { return false; }
+}
 const fmt = (m) => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
 
 /* Fungsi murni: daftar notifikasi yang harus dikirim sekarang untuk satu perangkat. */
@@ -45,7 +53,8 @@ function payload(n, city) {
 async function main() {
   const admin = require('firebase-admin');
   const webpush = require('web-push');
-  const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  let sa;
+  try { sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT); } catch (e) { throw new Error('FIREBASE_SERVICE_ACCOUNT bukan JSON yang valid'); }
   admin.initializeApp({ credential: admin.credential.cert(sa) });
   const db = admin.firestore();
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'https://github.com/', process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
@@ -62,6 +71,7 @@ async function main() {
     const sent = (logSnap.exists && logSnap.data().sent) || {};
     const todo = due(dev, sent, now);
     if (!todo.length) continue;
+    if (!endpointOk(dev.sub && dev.sub.endpoint)) { console.log('Alamat notifikasi tidak dikenal, dilewati.'); continue; }
     let gone = false;
     const z = localNow(dev.tz, now);
     const next = {};
@@ -70,7 +80,7 @@ async function main() {
       try {
         await webpush.sendNotification(dev.sub, JSON.stringify(payload(n, dev.city)), { TTL: 900, urgency: 'high' });
         next[n.key] = true; sentCount++;
-        console.log('Terkirim:', n.id, n.time, dev.city || '', 'terlambat', n.late, 'menit');
+        console.log('Terkirim:', n.id, n.time, 'terlambat', n.late, 'menit');
       } catch (e) {
         console.log('Gagal kirim', n.id, e.statusCode || e.message);
         if (e.statusCode === 404 || e.statusCode === 410) { gone = true; break; }
@@ -83,5 +93,5 @@ async function main() {
   console.log('Selesai. Terkirim:', sentCount);
 }
 
-module.exports = { due, localNow, payload };
+module.exports = { due, localNow, payload, endpointOk };
 if (require.main === module) main().catch((e) => { console.error(e); process.exit(1); });
